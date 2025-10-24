@@ -1,0 +1,71 @@
+version: "3.8"
+
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper:latest
+    ports:
+      - "2181:2181"
+    networks:
+      - auth_network
+
+  kafka:
+    image: wurstmeister/kafka:latest
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "user-events:1:1"
+    depends_on:
+      - zookeeper
+    networks:
+      - auth_network
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: authdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - auth_network
+    command: >
+      postgres
+      -c shared_preload_libraries=''
+      -c max_connections=100
+
+  auth_service:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/authdb
+      - KAFKA_BROKER=kafka:9092
+      - SECRET_KEY=your-super-secret-key-change-in-production
+      - DEBUG=True
+      - RECREATE_DB=False
+    volumes:
+      - ./app:/app/app
+    restart: unless-stopped
+    networks:
+      - auth_network
+
+volumes:
+  db_data:
+
+networks:
+  auth_network:
+    driver: bridge

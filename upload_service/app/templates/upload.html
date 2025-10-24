@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Model - ML Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-upload input[type="file"] {
+            display: none;
+        }
+        
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            border: 3px dashed #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .file-upload-label:hover {
+            background: #e9ecef;
+            border-color: #5568d3;
+        }
+        
+        .file-upload-label.has-file {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-right: 15px;
+        }
+        
+        .upload-text {
+            text-align: left;
+        }
+        
+        .upload-text h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .upload-text p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .requirements {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .requirements h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .requirements ul {
+            margin-left: 20px;
+            color: #856404;
+        }
+        
+        .requirements li {
+            margin-bottom: 5px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .progress {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="http://localhost:8000/dashboard" class="back-link">← Back to Dashboard</a>
+        
+        <h1>📤 Upload ML Model</h1>
+        <p class="subtitle">Upload your model as a ZIP file containing app.py and requirements.txt</p>
+        
+        <div class="requirements">
+            <h3>⚠️ Requirements</h3>
+            <ul>
+                <li>Your ZIP file must contain <code>app.py</code> (main application file)</li>
+                <li>Your ZIP file must contain <code>requirements.txt</code> (Python dependencies)</li>
+                <li>app.py should expose the model API on port 8080</li>
+                <li>Maximum file size: 500MB</li>
+            </ul>
+        </div>
+        
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required placeholder="Enter your username">
+            </div>
+            
+            <div class="form-group">
+                <label for="model_name">Model Name</label>
+                <input type="text" id="model_name" name="model_name" required placeholder="e.g., sentiment-analyzer">
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description (Optional)</label>
+                <textarea id="description" name="description" placeholder="Describe what your model does..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Model ZIP File</label>
+                <div class="file-upload">
+                    <input type="file" id="file" name="file" accept=".zip" required>
+                    <label for="file" class="file-upload-label" id="fileLabel">
+                        <span class="upload-icon">📁</span>
+                        <div class="upload-text">
+                            <h3>Click to select ZIP file</h3>
+                            <p>or drag and drop here</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+                Upload Model
+            </button>
+        </form>
+        
+        <div class="progress" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            <div class="progress-text" id="progressText">Uploading...</div>
+        </div>
+        
+        <div class="message" id="message"></div>
+    </div>
+    
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('file');
+        const fileLabel = document.getElementById('fileLabel');
+        const submitBtn = document.getElementById('submitBtn');
+        const progress = document.getElementById('progress');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const messageDiv = document.getElementById('message');
+        
+        // File input change handler
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                fileLabel.classList.add('has-file');
+                fileLabel.innerHTML = `
+                    <span class="upload-icon">✅</span>
+                    <div class="upload-text">
+                        <h3>${file.name}</h3>
+                        <p>${(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                    </div>
+                `;
+            }
+        });
+        
+        // Drag and drop
+        fileLabel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileLabel.style.borderColor = '#5568d3';
+        });
+        
+        fileLabel.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            fileLabel.style.borderColor = '#667eea';
+        });
+        
+        fileLabel.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileLabel.style.borderColor = '#667eea';
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].name.endsWith('.zip')) {
+                fileInput.files = files;
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        });
+        
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            
+            // Validate
+            if (!fileInput.files[0]) {
+                showMessage('Please select a file', 'error');
+                return;
+            }
+            
+            // Show progress
+            submitBtn.disabled = true;
+            progress.style.display = 'block';
+            messageDiv.style.display = 'none';
+            
+            try {
+                // Simulate upload progress
+                let uploadProgress = 0;
+                const progressInterval = setInterval(() => {
+                    if (uploadProgress < 90) {
+                        uploadProgress += 10;
+                        updateProgress(uploadProgress, 'Uploading...');
+                    }
+                }, 300);
+                
+                // Upload
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                clearInterval(progressInterval);
+                
+                if (response.ok) {
+                    updateProgress(95, 'Building Docker image...');
+                    
+                    const result = await response.json();
+                    
+                    updateProgress(100, 'Complete!');
+                    
+                    setTimeout(() => {
+                        showMessage(`✅ ${result.message}\n\nModel: ${result.data.model_name}\nDocker Image: ${result.data.docker_image}\nContainer ID: ${result.data.docker_container_id}`, 'success');
+                        progress.style.display = 'none';
+                        form.reset();
+                        fileLabel.classList.remove('has-file');
+                        fileLabel.innerHTML = `
+                            <span class="upload-icon">📁</span>
+                            <div class="upload-text">
+                                <h3>Click to select ZIP file</h3>
+                                <p>or drag and drop here</p>
+                            </div>
+                        `;
+                    }, 1000);
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showMessage('❌ ' + error.message, 'error');
+                progress.style.display = 'none';
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+        
+        function updateProgress(percent, text) {
+            progressFill.style.width = percent + '%';
+            progressFill.textContent = percent + '%';
+            progressText.textContent = text;
+        }
+        
+        function showMessage(msg, type) {
+            messageDiv.textContent = msg;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

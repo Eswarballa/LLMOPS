@@ -1,0 +1,13 @@
+docker rm -f $(docker ps -aq)
+
+docker compose up -d --build
+
+docker-compose down -v
+
+docker system prune -f
+
+sudo chmod 666 /var/run/docker.sock
+
+
+demon problem
+export DOCKER_HOST=unix:///var/run/docker.sock

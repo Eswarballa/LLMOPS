@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Auth Service</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h2>ML Platform Dashboard</h2>
+            <div class="nav-right">
+                <span class="username">👤 {{ username }}</span>
+                <a href="/logout" class="btn btn-secondary">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="card">
+            <h2>Welcome, {{ username }}!</h2>
+            <p>User ID: <code>{{ user_id }}</code></p>
+            <p>You are successfully authenticated.</p>
+        </div>
+
+        <div class="card">
+            <h3>Request services</h3>
+            <p>Publish events to other microservices via Kafka</p>
+            
+            <div class="form-group">
+                <label for="event-type">Event Type</label>
+                <select id="event-type">
+                    <option value="model.upload.request">Model Upload Request</option>
+                    <option value="inference.request">Inference Request</option>
+                    <option value="user.action">User Action</option>
+                    <option value="custom.event">Custom Event</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="event-data">Event Data (JSON)</label>
+                <textarea id="event-data" rows="5" placeholder='{"key": "value"}'>{
+  "action": "test",
+  "timestamp": "{{ user_id }}"
+}</textarea>
+            </div>
+
+            <button onclick="publishEvent()" class="btn btn-primary">Enter</button>
+            
+            <div id="kafka-message" class="message"></div>
+        </div>
+
+        <div class="card">
+            <h3>📊 Available Services</h3>
+            <div class="service-grid">
+                <div class="service-card">
+                    <h4>📤 Upload Service</h4>
+                    <p>Upload ML models</p>
+                    <button class="btn btn-secondary" disabled>Coming Soon</button>
+                </div>
+                <div class="service-card">
+                    <h4>🤖 Inference Service</h4>
+                    <p>Run model predictions</p>
+                    <button class="btn btn-secondary" disabled>Coming Soon</button>
+                </div>
+                <div class="service-card">
+                    <h4>📈 Monitoring</h4>
+                    <p>View metrics</p>
+                    <button class="btn btn-secondary" disabled>Coming Soon</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📋 Recent Activity</h3>
+            <div id="activity-log">
+                <p class="log-item">✅ User logged in successfully</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function publishEvent() {
+            const eventType = document.getElementById('event-type').value;
+            const eventDataStr = document.getElementById('event-data').value;
+            
+            try {
+                const eventData = JSON.parse(eventDataStr);
+                
+                const response = await fetch('/api/kafka/publish', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        event_type: eventType,
+                        data: eventData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showMessage('✅ Event published to Kafka successfully!', 'success');
+                    addActivityLog(`📤 Published event: ${eventType}`);
+                } else {
+                    showMessage('❌ Failed to publish event: ' + result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Invalid JSON or network error', 'error');
+            }
+        }
+
+        function showMessage(msg, type) {
+            const messageDiv = document.getElementById('kafka-message');
+            messageDiv.textContent = msg;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            setTimeout(() => messageDiv.style.display = 'none', 5000);
+        }
+
+        function addActivityLog(msg) {
+            const log = document.getElementById('activity-log');
+            const logItem = document.createElement('p');
+            logItem.className = 'log-item';
+            logItem.textContent = `${new Date().toLocaleTimeString()} - ${msg}`;
+            log.insertBefore(logItem, log.firstChild);
+        }
+
+        // Load user profile on page load
+        async function loadProfile() {
+            try {
+                const response = await fetch('/api/user/profile');
+                const profile = await response.json();
+                console.log('User profile:', profile);
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+            }
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>
